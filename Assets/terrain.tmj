@@ -60,10 +60,11 @@
  "tiledversion":"1.11.1",
  "tileheight":16,
  "tilesets":[
-        {
-         "firstgid":1,
-         "source":"grass.tsj"
-        }],
+    {
+        "firstgid": 1,
+        "source": "grass.tsj"
+    }
+ ],
  "tilewidth":16,
  "type":"map",
  "version":"1.10",

@@ -29,13 +29,20 @@
          "image":"grass_003.png",
          "imageheight":16,
          "imagewidth":16
-        }, 
+        },
         {
-         "id":3,
-         "image":"grass_004.png",
-         "imageheight":16,
-         "imagewidth":16
-        }],
+            "id": 3,
+            "image": "grass_004.png",
+            "imageheight": 16,
+            "imagewidth": 16
+        },
+        {
+            "id": 4,
+            "image": "burning_ground.png",
+            "imageheight": 16,
+            "imagewidth": 16
+        }
+     ],
  "tilewidth":16,
  "type":"tileset",
  "version":"1.10"

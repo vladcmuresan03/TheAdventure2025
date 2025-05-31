@@ -19,7 +19,9 @@ public class RandomBomb : IScript
             var playerPos = engine.GetPlayerPosition();
             var bombPosX = playerPos.X + Random.Shared.Next(-50, 50);
             var bombPosY = playerPos.Y + Random.Shared.Next(-50, 50);
-            engine.AddBomb(bombPosX, bombPosY, false);
+
+            // Call AddBomb => spreadsFire = true (fire bomb); translateCoordinates = false
+            engine.AddBomb(bombPosX, bombPosY, true, false);
         }
     }
 }

@@ -1,0 +1,25 @@
+{
+    "FileName": "pixel_droplet.png",
+    "FrameWidth": 16,
+    "FrameHeight": 16,
+    "FrameCenter": {
+        "OffsetX": 8,
+        "OffsetY": 8
+    },
+    "RowCount": 1,
+    "ColumnCount": 4,
+    "Animations": {
+        "ImpactSplash": {
+            "StartFrame": {
+                "Row": 0,
+                "Col": 0
+            },
+            "EndFrame": {
+                "Row": 0,
+                "Col": 3
+            },
+            "DurationMs": 300,
+            "Loop": false
+        }
+    }
+}

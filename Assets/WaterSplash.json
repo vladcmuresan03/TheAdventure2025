@@ -1,0 +1,25 @@
+{
+    "FileName": "water_splash.png",
+    "FrameWidth": 40,
+    "FrameHeight": 40,
+    "FrameCenter": {
+        "OffsetX": 18,
+        "OffsetY": 18
+    },
+    "RowCount": 1,
+    "ColumnCount": 4,
+    "Animations": {
+        "ImpactSplash": {
+            "StartFrame": {
+                "Row": 3,
+                "Col": 0
+            },
+            "EndFrame": {
+                "Row": 0,
+                "Col": 0
+            },
+            "DurationMs": 3000,
+            "Loop": false
+        }
+    }
+}
