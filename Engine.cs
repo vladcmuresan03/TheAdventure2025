@@ -1,3 +1,4 @@
+using System.Data;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
@@ -51,6 +52,10 @@ public class Engine
 
     public void SetupWorld()
     {
+        _gameObjects.Clear();
+        _tileIdMap.Clear();
+        _loadedTileSets.Clear();
+
         _player = new(SpriteSheet.Load(_renderer, "Player.json", "Assets"), 100, 100);
 
         var levelContent = File.ReadAllText(Path.Combine("Assets", "terrain.tmj"));
@@ -110,8 +115,14 @@ public class Engine
         if (_player.State.State == PlayerObject.PlayerState.GameOver && _isAlive)
         {
             _isAlive = false;
-            Console.WriteLine($"You lost! You survived for: {_timeAlive:F2} seconds");
-            // Here you would later trigger the leaderboard display and name entry
+            Console.WriteLine($"You lost! You survived for: {_timeAlive:F2} seconds. Press R to play again!");
+        }
+
+        if (!_isAlive && _input.IsKeyRPressed())
+        {
+            SetupWorld();
+            _lastWaterDropTime = DateTimeOffset.MinValue;
+            return;
         }
 
         if (_isAlive)
