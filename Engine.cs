@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Silk.NET.Maths;
 using TheAdventure.Models;
@@ -29,6 +30,8 @@ public class Engine
     private const int GRASS_TILE_GID = 1;
     private const int WALKABLE_LAYER_INDEX = 0;
 
+    private double _timeAlive = 0.0;
+    private bool _isAlive = true;
 
     public Engine(GameRenderer renderer, Input input)
     {
@@ -56,6 +59,8 @@ public class Engine
         {
             throw new Exception("Failed to load level");
         }
+        _timeAlive = 0.0;
+        _isAlive = true;
 
         foreach (var tileSetRef in level.TileSets)
         {
@@ -99,41 +104,63 @@ public class Engine
         var msSinceLastFrame = (currentTime - _lastUpdate).TotalMilliseconds;
         _lastUpdate = currentTime;
 
-        if (_player == null)
+        if (_player == null) return;
+
+        // Check for game over condition first
+        if (_player.State.State == PlayerObject.PlayerState.GameOver && _isAlive)
         {
-            return;
+            _isAlive = false;
+            Console.WriteLine($"You lost! You survived for: {_timeAlive:F2} seconds");
+            // Here you would later trigger the leaderboard display and name entry
         }
 
-        double up = _input.IsUpPressed() ? 1.0 : 0.0;
-        double down = _input.IsDownPressed() ? 1.0 : 0.0;
-        double left = _input.IsLeftPressed() ? 1.0 : 0.0;
-        double right = _input.IsRightPressed() ? 1.0 : 0.0;
-        bool tryDropWater = _input.IsKeyBPressed();
-
-
-        int worldPixelMinX = 0;
-        int worldPixelMinY = 0;
-        int worldPixelMaxX = _currentLevel.Width.Value * _currentLevel.TileWidth.Value;
-        int worldPixelMaxY = _currentLevel.Height.Value * _currentLevel.TileHeight.Value;
-
-        _player.UpdatePosition(up, down, left, right,
-                               worldPixelMinX, worldPixelMinY,
-                               worldPixelMaxX, worldPixelMaxY,
-                               msSinceLastFrame);
-
-        _scriptEngine.ExecuteAll(this);
-
-        if (tryDropWater) // Player tries to drop water with B key
+        if (_isAlive)
         {
-            if ((DateTimeOffset.Now - _lastWaterDropTime).TotalSeconds >= WATER_DROP_COOLDOWN_SECONDS)
+            _timeAlive += msSinceLastFrame / 1000.0; // Accumulate time alive
+
+            // Player input and movement
+            double up = _input.IsUpPressed() ? 1.0 : 0.0;
+            double down = _input.IsDownPressed() ? 1.0 : 0.0;
+            double left = _input.IsLeftPressed() ? 1.0 : 0.0;
+            double right = _input.IsRightPressed() ? 1.0 : 0.0;
+            bool tryDropWater = _input.IsKeyBPressed();
+            bool isAttacking = _input.IsKeyAPressed();
+
+
+            // Calculate world boundaries for player clamping
+            int worldPixelMinX = 0;
+            int worldPixelMinY = 0;
+            int worldPixelMaxX = _currentLevel.Width!.Value * _currentLevel.TileWidth!.Value;
+            int worldPixelMaxY = _currentLevel.Height!.Value * _currentLevel.TileHeight!.Value;
+
+            _player.UpdatePosition(up, down, left, right,
+                                   worldPixelMinX, worldPixelMinY,
+                                   worldPixelMaxX, worldPixelMaxY,
+                                   msSinceLastFrame);
+
+            if (isAttacking) // Handle attack input
             {
-                // Call AddBomb => spreadsFire = false (water extinguishes fire); translateCoordinates = false (use player's current position);
-                AddBomb(_player.Position.X, _player.Position.Y, false, false);
-                _lastWaterDropTime = DateTimeOffset.Now;
+                _player.Attack();
             }
-        }
 
-        CheckPlayerOnFire();
+            _scriptEngine.ExecuteAll(this); // Scripts might spawn game bombs
+
+            if (tryDropWater) // Player tries to drop water with B key
+            {
+                if ((DateTimeOffset.Now - _lastWaterDropTime).TotalSeconds >= WATER_DROP_COOLDOWN_SECONDS)
+                {
+                    // Water droplet by 'B' key: spreadsFire = false, translateCoordinates = false (use player's current pos)
+                    AddBomb(_player.Position.X, _player.Position.Y, false, false);
+                    _lastWaterDropTime = DateTimeOffset.Now;
+                }
+            }
+            CheckPlayerOnFire(); // Check if player stepped on fire
+        }
+        else
+        {
+            // Game is over, player is not alive.
+            // Handle input for restarting, e.g., if (Input.IsKeyJustPressed(KeyCode.R)) SetupWorld();
+        }
     }
 
     public void RenderFrame()
@@ -394,6 +421,11 @@ public class Engine
             if (groundLayer.Data[playerTileIndex] == BURNING_TILE_GID)
                 _player.GameOver();
         }
+    }
+
+    public double GetTimeAlive()
+    {
+        return _timeAlive;
     }
 
 }
