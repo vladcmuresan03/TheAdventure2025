@@ -83,7 +83,7 @@ public class PlayerObject : RenderableGameObject
         SetState(PlayerState.Attack, direction);
     }
 
-    public void UpdatePosition(double up, double down, double left, double right, int width, int height, double time)
+    public void UpdatePosition(double up, double down, double left, double right, int worldMinX, int worldMinY, int worldMaxX, int worldMaxY, double time)
     {
         if (State.State == PlayerState.GameOver)
         {
@@ -101,6 +101,19 @@ public class PlayerObject : RenderableGameObject
         var newState = State.State;
         var newDirection = State.Direction;
 
+        // Get player dimensions (ensure SpriteSheet is not null)
+        int playerWidth = SpriteSheet?.FrameWidth ?? 0;
+        int playerHeight = SpriteSheet?.FrameHeight ?? 0;
+        int halfPlayerWidth = playerWidth / 2;
+        int halfPlayerHeight = playerHeight / 2;
+
+        x = Math.Max(worldMinX + halfPlayerWidth, x);
+        x = Math.Min(worldMaxX - halfPlayerWidth, x);
+        y = Math.Max(worldMinY + halfPlayerHeight, y);
+        y = Math.Min(worldMaxY - halfPlayerHeight, y);
+
+        bool hasMovementInput = (up > 0 || down > 0 || left > 0 || right > 0);
+
         if (x == Position.X && y == Position.Y)
         {
             if (State.State == PlayerState.Attack)
@@ -115,30 +128,36 @@ public class PlayerObject : RenderableGameObject
                 newState = PlayerState.Idle;
             }
         }
-        else
+        else if (hasMovementInput) // if there IS movement input
         {
             newState = PlayerState.Move;
-            
-            if (y < Position.Y && newDirection != PlayerStateDirection.Up)
-            {
-                newDirection = PlayerStateDirection.Up;
-            }
 
-            if (y > Position.Y && newDirection != PlayerStateDirection.Down)
+            if (up > 0) newDirection = PlayerStateDirection.Up;
+            else if (down > 0) newDirection = PlayerStateDirection.Down;
+            else if (left > 0) newDirection = PlayerStateDirection.Left;
+            else if (right > 0) newDirection = PlayerStateDirection.Right;
+        }
+
+        else // No movement input, but position might have changed (e.g. pushed) or attack finished
+        {
+            newState = PlayerState.Idle; // Default to idle if not attacking and no input
+            if (State.State == PlayerState.Attack && SpriteSheet.AnimationFinished)
+            {
+            }
+            else if (State.Direction == PlayerStateDirection.None)
             {
                 newDirection = PlayerStateDirection.Down;
             }
-
-            if (x < Position.X && newDirection != PlayerStateDirection.Left)
-            {
-                newDirection = PlayerStateDirection.Left;
-            }
-
-            if (x > Position.X && newDirection != PlayerStateDirection.Right)
-            {
-                newDirection = PlayerStateDirection.Right;
-            }
         }
+
+        // If an attack just finished, it might have set newState to Idle.
+        // If there was also movement input, newState should be Move.
+        if (State.State == PlayerState.Attack && SpriteSheet.AnimationFinished && hasMovementInput)
+        {
+            newState = PlayerState.Move;
+            // Direction is already set by hasMovementInput block above
+        }
+
 
         if (newState != State.State || newDirection != State.Direction)
         {

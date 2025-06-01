@@ -110,11 +110,20 @@ public class Engine
         double right = _input.IsRightPressed() ? 1.0 : 0.0;
         bool tryDropWater = _input.IsKeyBPressed();
 
-        _player.UpdatePosition(up, down, left, right, 48, 48, msSinceLastFrame);
-        
+
+        int worldPixelMinX = 0;
+        int worldPixelMinY = 0;
+        int worldPixelMaxX = _currentLevel.Width.Value * _currentLevel.TileWidth.Value;
+        int worldPixelMaxY = _currentLevel.Height.Value * _currentLevel.TileHeight.Value;
+
+        _player.UpdatePosition(up, down, left, right,
+                               worldPixelMinX, worldPixelMinY,
+                               worldPixelMaxX, worldPixelMaxY,
+                               msSinceLastFrame);
+
         _scriptEngine.ExecuteAll(this);
 
-        if(tryDropWater) // Player tries to drop water with B key
+        if (tryDropWater) // Player tries to drop water with B key
         {
             if ((DateTimeOffset.Now - _lastWaterDropTime).TotalSeconds >= WATER_DROP_COOLDOWN_SECONDS)
             {
@@ -157,7 +166,7 @@ public class Engine
                 {
                     HandleTerrainInteraction(tempGameObject); // Spreads fire
                 }
-                else 
+                else
                 {
                     HandleTerrainInteraction(tempGameObject); // Extinguishes fire
 
@@ -388,5 +397,3 @@ public class Engine
     }
 
 }
-
-
